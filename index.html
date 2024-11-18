@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel File Analyzer</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Подключение библиотеки XLSX через CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Excel File Analyzer</h1>
+        <form id="uploadForm">
+            <label for="file1">Upload First File:</label>
+            <input type="file" id="file1" accept=".xls,.xlsx">
+            
+            <label for="file2">Upload Second File:</label>
+            <input type="file" id="file2" accept=".xls,.xlsx">
+            
+            <button type="button" id="analyzeButton">Analyze Files</button>
+        </form>
+        
+        <div id="resultContainer">
+            <h2>Analysis Results:</h2>
+            <table id="resultTable">
+                <thead>
+                    <tr>
+                        <th>Column 1</th>
+                        <th>Column 2</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Results will be injected here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
