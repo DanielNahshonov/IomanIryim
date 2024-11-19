@@ -130,18 +130,28 @@ function isTimeInRange(timeToCheck, startTime, endTime) {
 }
 
 // Функция для вывода результатов анализа
+// Функция для вывода результатов анализа
 function displayAnalysisResults(results) {
     const analysisTableBody = document.getElementById('analysisTable').querySelector('tbody');
     analysisTableBody.innerHTML = '';
-    results.forEach(result => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${result.makat}</td>
-            <td>${result.time}</td>
-            <td>${result.status}</td>
-        `;
-        analysisTableBody.appendChild(row);
-    });
+
+    if (results.length === 0) {
+        // Если нет результатов, выводим сообщение
+        const messageRow = document.createElement('tr');
+        messageRow.innerHTML = `<td colspan="3" style="text-align: center;">כל הכבוד לאושרית!!!.</td>`;
+        analysisTableBody.appendChild(messageRow);
+    } else {
+        // Если есть результаты, добавляем их в таблицу
+        results.forEach(result => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${result.makat}</td>
+                <td>${result.time}</td>
+                <td>${result.status}</td>
+            `;
+            analysisTableBody.appendChild(row);
+        });
+    }
 }
 
 // Утилитарные функции
