@@ -1,3 +1,7 @@
+// Глобальные переменные для данных обоих файлов
+let filteredFile1Data = [];
+let file2DataObject = [];
+
 // Обработчик загрузки первого файла
 document.getElementById('file1').addEventListener('change', function(event) {
     const file = event.target.files[0];
@@ -5,10 +9,10 @@ document.getElementById('file1').addEventListener('change', function(event) {
     reader.onload = function(e) {
         const data = e.target.result;
         const workbook = XLSX.read(data, { type: 'array' });
-        file1Data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+        const file1Data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
 
         // Фильтруем данные, оставляем только нужные столбцы
-        const filteredFile1Data = file1Data.slice(1).map(row => {
+        filteredFile1Data = file1Data.slice(1).map(row => {
             return {
                 makat: `${row[4]}-${row[5]}`, // Формируем makat из двух столбцов
                 time: formatExcelDate(row[10]), // Форматируем время
@@ -33,13 +37,10 @@ document.getElementById('file2').addEventListener('change', function(event) {
     const file = event.target.files[0];
     const reader = new FileReader();
     
-    // Создаем объект для хранения данных
-    let file2DataObject = [];
-
     reader.onload = function(e) {
         const data = e.target.result;
         const workbook = XLSX.read(data, { type: 'array' });
-        file2Data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+        const file2Data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
         console.log("Second file loaded:", file2Data);
 
         if (file2Data.length > 1) {
@@ -83,39 +84,44 @@ document.getElementById('file2').addEventListener('change', function(event) {
 
     reader.readAsArrayBuffer(file);
 });
+
 // Основная функция для обработки анализа
 document.getElementById('analyzeButton').addEventListener('click', analyzeFiles);
 
 function analyzeFiles() {
     const analysisResults = [];
-    file1Data.forEach((row1, index1) => {
-        if (index1 > 0) {
-            const makat1 = `${row1[4]}-${row1[5]}`;
-            const time1 = row1[10];
-            const time1Date = excelDateToJSDate(time1);
-            let isMatchFound = false;
+    filteredFile1Data.forEach((row1) => {
+        const makat1 = row1.makat;
+        const time1 = row1.time; // Время в формате строки "DD/MM/YYYY HH:MM:SS"
+        const time1Date = stringToDate(time1); // Преобразуем строку в объект Date
+        let isMatchFound = false;
 
-            file2Data.forEach((row2, index2) => {
-                if (index2 > 0) {
-                    const makat2s = row2[8].split(',');
-                    const startTime = row2[5];
-                    const endTime = row2[6];
-                    const startTimeDate = excelDateToJSDate(startTime);
-                    const endTimeDate = excelDateToJSDate(endTime);
+        file2DataObject.forEach((row2) => {
+            const makat2 = row2.makat;
+            const startTime = row2.startTime; // Время в формате строки "DD/MM/YYYY HH:MM:SS"
+            const endTime = row2.endTime; // Время в формате строки "DD/MM/YYYY HH:MM:SS"
+            const startTimeDate = stringToDate(startTime); // Преобразуем строку в объект Date
+            const endTimeDate = stringToDate(endTime); // Преобразуем строку в объект Date
 
-                    // Проверка на совпадение маката и времени в промежутке
-                    if (makat2s.includes(makat1) && isTimeInRange(time1Date, startTimeDate, endTimeDate)) {
-                        isMatchFound = true;
-                    }
-                }
-            });
+            // Сравниваем значения времени как объекты Date
+            if (makat2 === makat1 && isTimeInRange(time1Date, startTimeDate, endTimeDate)) {
+                isMatchFound = true;
+            }
+        });
 
-            const matchStatus = isMatchFound ? 'Match' : 'No Match';
-            analysisResults.push({ makat: makat1, time: formatExcelDate(time1), status: matchStatus });
+        // Добавляем только те результаты, у которых "No Match"
+        if (!isMatchFound) {
+            analysisResults.push({ makat: makat1, time: time1, status: 'No Match' });
         }
     });
 
     displayAnalysisResults(analysisResults);
+}
+
+// Функция для преобразования строки даты в объект Date
+function stringToDate(dateString) {
+    const [day, month, year, hour, minute, second] = dateString.split(/[/ :]/);
+    return new Date(year, month - 1, day, hour, minute, second);
 }
 
 // Функция для проверки, попадает ли время в промежуток
@@ -140,18 +146,39 @@ function displayAnalysisResults(results) {
 
 // Утилитарные функции
 
+function jsDateToExcelDate(jsDate) {
+    // Получаем количество миллисекунд с 1 января 1970 года
+    const msInDay = 86400 * 1000;
+    const excelBaseDate = new Date(1900, 0, 1); // 1 января 1900 года
+    const timeDiff = jsDate - excelBaseDate; // Разница в миллисекундах между датами
+    
+    // Возвращаем количество дней в формате Excel
+    return timeDiff / msInDay + 25569; // 25569 — это количество дней от 1900 года до 1970 года
+}
+
 function excelDateToJSDate(excelDate) {
-    return new Date((excelDate - 25569) * 86400 * 1000);
+    const jsDate = new Date((excelDate - 25569) * 86400 * 1000);
+    const utcDate = new Date(jsDate.toUTCString());
+
+    // Применяем округление до ближайшей минуты
+    const roundedDate = roundToMinute(utcDate);
+
+    return roundedDate;
+}
+
+function roundToMinute(date) {
+    const msInMinute = 60000;
+    return new Date(Math.round(date.getTime() / msInMinute) * msInMinute);
 }
 
 function formatExcelDate(excelDate) {
     const jsDate = excelDateToJSDate(excelDate);
-    const day = jsDate.getDate().toString().padStart(2, '0');
-    const month = (jsDate.getMonth() + 1).toString().padStart(2, '0');
-    const year = jsDate.getFullYear();
-    const hours = jsDate.getHours().toString().padStart(2, '0');
-    const minutes = jsDate.getMinutes().toString().padStart(2, '0');
-    const seconds = jsDate.getSeconds().toString().padStart(2, '0');
+    const day = jsDate.getUTCDate().toString().padStart(2, '0');
+    const month = (jsDate.getUTCMonth() + 1).toString().padStart(2, '0');
+    const year = jsDate.getUTCFullYear();
+    const hours = jsDate.getUTCHours().toString().padStart(2, '0');
+    const minutes = jsDate.getUTCMinutes().toString().padStart(2, '0');
+    const seconds = jsDate.getUTCSeconds().toString().padStart(2, '0');
     return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
 }
 
@@ -159,12 +186,5 @@ function addRowToTable(makat, timeValue) {
     const tableBody = document.getElementById('resultTable1').querySelector('tbody');
     const row = document.createElement('tr');
     row.innerHTML = `<td>${makat}</td><td>${timeValue}</td>`;
-    tableBody.appendChild(row);
-}
-
-function addRowToTableForFile2(makat, startTime, endTime) {
-    const tableBody = document.getElementById('resultTable2').querySelector('tbody');
-    const row = document.createElement('tr');
-    row.innerHTML = `<td>${makat}</td><td>${startTime}</td><td>${endTime}</td>`;
     tableBody.appendChild(row);
 }
