@@ -5,37 +5,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Excel File Analyzer</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Подключение библиотеки XLSX через CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 </head>
 <body>
-    <div class="container">
+    <div class="main-container">
         <h1>Excel File Analyzer</h1>
-        <form id="uploadForm">
-            <label for="file1">Upload First File:</label>
-            <input type="file" id="file1" accept=".xls,.xlsx">
-            
-            <label for="file2">Upload Second File:</label>
-            <input type="file" id="file2" accept=".xls,.xlsx">
-            
-            <button type="button" id="analyzeButton">Analyze Files</button>
-        </form>
-        
-        <div id="resultContainer">
-            <h2>Analysis Results:</h2>
-            <table id="resultTable">
-                <thead>
-                    <tr>
-                        <th>Column 1</th>
-                        <th>Column 2</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Results will be injected here -->
-                </tbody>
-            </table>
+        <div class="tables-container">
+            <!-- First File Section -->
+            <div class="file-section">
+                <h2>Avner Excel File Analyzer</h2>
+                <form>
+                    <label for="file1">Upload File:</label>
+                    <input type="file" id="file1" accept=".xls,.xlsx">
+                </form>
+                <div class="table-container">
+                    <table id="resultTable1">
+                        <thead>
+                            <tr>
+                                <th>Makat</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Results for File 1 will appear here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Second File Section -->
+            <div class="file-section">
+                <h2>Tahbura Excel File Analyzer</h2>
+                <form>
+                    <label for="file2">Upload Second File:</label>
+                    <input type="file" id="file2" accept=".xls,.xlsx">
+                </form>
+                <div class="table-container">
+                    <table id="resultTable2">
+                        <thead>
+                            <tr>
+                                <th>Makat</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Results for File 2 will appear here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Analysis Section -->
+            <div class="file-section">
+                <h2>Analysis Results</h2>
+                <div class="table-container">
+                    <table id="analysisTable">
+                        <thead>
+                            <tr>
+                                <th>Makat</th>
+                                <th>Time</th>
+                                <th>Match Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Analysis results will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Add the button to trigger analysis -->
+                <button id="analyzeButton">Run Analysis</button>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>
 </body>
+
 </html>

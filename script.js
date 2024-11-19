@@ -1,152 +1,170 @@
-document.getElementById('analyzeButton').addEventListener('click', processData);
-
-let file1Data = null;
-let file2Data = null;
-
-// Функция для преобразования даты Excel в стандартный объект Date
-function excelDateToJSDate(excelDate) {
-    return new Date((excelDate - 25569) * 86400 * 1000);
-}
-
-// Загрузка первого файла
+// Обработчик загрузки первого файла
 document.getElementById('file1').addEventListener('change', function(event) {
     const file = event.target.files[0];
     const reader = new FileReader();
     reader.onload = function(e) {
         const data = e.target.result;
         const workbook = XLSX.read(data, { type: 'array' });
-        file1Data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 }); // Прочитать все строки как массив
+        file1Data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
 
-        console.log("First file loaded:", file1Data); // Лог для загрузки первого файла
+        // Фильтруем данные, оставляем только нужные столбцы
+        const filteredFile1Data = file1Data.slice(1).map(row => {
+            return {
+                makat: `${row[4]}-${row[5]}`, // Формируем makat из двух столбцов
+                time: formatExcelDate(row[10]), // Форматируем время
+            };
+        });
 
-        // Проверяем, есть ли данные и выводим значения из E2, F2 и K2
-        if (file1Data.length > 1) {
-            const e2Value = file1Data[1][4]; // Столбец E, строка 2
-            const f2Value = file1Data[1][5]; // Столбец F, строка 2
-            const k2Value = file1Data[1][10]; // Столбец K, строка 2
-            const currentDate = new Date().toLocaleString(); // Получаем текущую дату и время
-            console.log(`E2-F2-K2: ${e2Value} - ${f2Value} - ${k2Value} (Date: ${currentDate})`);
+        console.log("Filtered first file data:", filteredFile1Data);
+
+        if (filteredFile1Data.length > 0) {
+            filteredFile1Data.forEach(({ makat, time }) => {
+                addRowToTable(makat, time);
+            });
         } else {
-            console.log("No data found in the first file.");
+            console.log("No data found in the filtered first file.");
         }
     };
-    reader.readAsArrayBuffer(file);  // Чтение как массив
+    reader.readAsArrayBuffer(file);
 });
 
-// Загрузка второго файла
+// Обработчик загрузки второго файла
 document.getElementById('file2').addEventListener('change', function(event) {
     const file = event.target.files[0];
     const reader = new FileReader();
+    
+    // Создаем объект для хранения данных
+    let file2DataObject = [];
+
     reader.onload = function(e) {
         const data = e.target.result;
         const workbook = XLSX.read(data, { type: 'array' });
-        file2Data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 }); // Прочитать все строки как массив
+        file2Data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+        console.log("Second file loaded:", file2Data);
 
-        console.log("Second file loaded:", file2Data); // Лог для загрузки второго файла
-
-        // Проверяем, есть ли данные и выводим значения из F2 и G2
         if (file2Data.length > 1) {
-            const f2Value = file2Data[1][5]; // Столбец F, строка 2 (индекс 5)
-            const g2Value = file2Data[1][6]; // Столбец G, строка 2 (индекс 6)
+            // Очищаем таблицу перед добавлением новых данных
+            const tableBody = document.getElementById('resultTable2').querySelector('tbody');
+            tableBody.innerHTML = ''; // Очищаем таблицу перед добавлением новых данных
 
-            console.log(`F2: ${f2Value}, G2: ${g2Value}`);
+            file2Data.forEach((row, index) => {
+                if (index > 0) { // Пропускаем первую строку с заголовками
+                    const startTime = row[5];
+                    const endTime = row[6];
+                    const makatList = row[8];
+                    if (makatList) {
+                        const makatArray = makatList.split(',').map(m => m.trim());
+                        makatArray.forEach(makat => {
+                            // Добавляем данные в объект
+                            file2DataObject.push({
+                                makat: makat,
+                                startTime: startTime,
+                                endTime: endTime
+                            });
+
+                            // Создаем строку таблицы для каждого маката
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${makat}</td>
+                                <td>${startTime}</td>
+                                <td>${endTime}</td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    }
+                }
+            });
+
+            console.log("Data added to file2DataObject:", file2DataObject);
         } else {
             console.log("No data found in the second file.");
         }
     };
-    reader.readAsArrayBuffer(file);  // Чтение как массив
+
+    reader.readAsArrayBuffer(file);
 });
+// Основная функция для обработки анализа
+document.getElementById('analyzeButton').addEventListener('click', analyzeFiles);
 
-// Основная функция обработки данных
-function processData() {
-    console.log("Processing data...");
+function analyzeFiles() {
+    const analysisResults = [];
+    file1Data.forEach((row1, index1) => {
+        if (index1 > 0) {
+            const makat1 = `${row1[4]}-${row1[5]}`;
+            const time1 = row1[10];
+            const time1Date = excelDateToJSDate(time1);
+            let isMatchFound = false;
 
-    if (!file1Data || !file2Data) {
-        alert("Please upload both files.");
-        console.log("Files not uploaded properly.");
-        return;
-    }
+            file2Data.forEach((row2, index2) => {
+                if (index2 > 0) {
+                    const makat2s = row2[8].split(',');
+                    const startTime = row2[5];
+                    const endTime = row2[6];
+                    const startTimeDate = excelDateToJSDate(startTime);
+                    const endTimeDate = excelDateToJSDate(endTime);
 
-    const notFound = [];
-    console.log("File 1 data:", file1Data);
-    console.log("File 2 data:", file2Data);
-
-    file1Data.forEach(row1 => {
-        const e2Value = row1[4]; // Столбец E, строка 2 (индекс 4)
-        const f2Value = row1[5]; // Столбец F, строка 2 (индекс 5)
-        const e2_d2 = `${e2Value}-${f2Value}`;
-
-        // Преобразуем дату из Excel в стандартную дату
-        const eventTime = excelDateToJSDate(row1[10]); // Столбец K, строка 2 (индекс 10)
-
-        if (isNaN(eventTime)) {
-            console.log(`Invalid event date in file 1 for row: ${JSON.stringify(row1)}`);
-            return;
-        }
-
-        const location = row1[2]; // Столбец C, строка 2 (индекс 2)
-
-        console.log(`Checking row: ${e2_d2}, event time: ${eventTime}, location: ${location}`);
-
-        const matchB = file2Data.filter(row2 => row2[1] === row1[1]); // Сравниваем столбцы B (индекс 1)
-        console.log("Matching rows from file2:", matchB);
-
-        if (matchB.length > 0) {
-            matchB.forEach(row2 => {
-                const startTime = excelDateToJSDate(row2[5]); // Столбец F, строка 2 (индекс 5)
-                const endTime = excelDateToJSDate(row2[6]); // Столбец G, строка 2 (индекс 6)
-
-                if (isNaN(startTime) || isNaN(endTime)) {
-                    console.log(`Invalid start or end time in file 2 for row: ${JSON.stringify(row2)}`);
-                    return;
-                }
-
-                console.log(`Comparing event time with row2's start time: ${startTime}, end time: ${endTime}`);
-
-                // Проверяем, попадает ли время события в диапазон
-                if (startTime <= eventTime && eventTime <= endTime) {
-                    const events = row2[8].split(','); // Столбец I, строка 2 (индекс 8)
-                    console.log("Events from file2:", events);
-
-                    if (!events.includes(e2_d2)) {
-                        console.log(`Event not found in file2: ${e2_d2}`);
-                        notFound.push(row1);
-                    } else {
-                        console.log(`Event found: ${e2_d2}`);
+                    // Проверка на совпадение маката и времени в промежутке
+                    if (makat2s.includes(makat1) && isTimeInRange(time1Date, startTimeDate, endTimeDate)) {
+                        isMatchFound = true;
                     }
                 }
             });
-        } else {
-            console.log(`No match found for B column value: ${row1[1]}`);
-            notFound.push(row1);
+
+            const matchStatus = isMatchFound ? 'Match' : 'No Match';
+            analysisResults.push({ makat: makat1, time: formatExcelDate(time1), status: matchStatus });
         }
     });
 
-    displayNotFound(notFound);
+    displayAnalysisResults(analysisResults);
 }
 
-// Функция для отображения не найденных записей
-function displayNotFound(notFound) {
-    console.log("Displaying not found results:", notFound);
+// Функция для проверки, попадает ли время в промежуток
+function isTimeInRange(timeToCheck, startTime, endTime) {
+    return timeToCheck >= startTime && timeToCheck <= endTime;
+}
 
-    const tableBody = document.querySelector('#resultTable tbody');
-    tableBody.innerHTML = ''; // Очищаем таблицу перед добавлением новых данных
-
-    const fragment = document.createDocumentFragment();
-
-    notFound.forEach((row, index) => {
-        const tr = document.createElement('tr');
-        
-        const td1 = document.createElement('td');
-        const td2 = document.createElement('td');
-
-        td1.textContent = index + 1;
-        td2.textContent = JSON.stringify(row);
-
-        tr.appendChild(td1);
-        tr.appendChild(td2);
-        fragment.appendChild(tr);
+// Функция для вывода результатов анализа
+function displayAnalysisResults(results) {
+    const analysisTableBody = document.getElementById('analysisTable').querySelector('tbody');
+    analysisTableBody.innerHTML = '';
+    results.forEach(result => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${result.makat}</td>
+            <td>${result.time}</td>
+            <td>${result.status}</td>
+        `;
+        analysisTableBody.appendChild(row);
     });
+}
 
-    tableBody.appendChild(fragment); // Добавляем все строки сразу
+// Утилитарные функции
+
+function excelDateToJSDate(excelDate) {
+    return new Date((excelDate - 25569) * 86400 * 1000);
+}
+
+function formatExcelDate(excelDate) {
+    const jsDate = excelDateToJSDate(excelDate);
+    const day = jsDate.getDate().toString().padStart(2, '0');
+    const month = (jsDate.getMonth() + 1).toString().padStart(2, '0');
+    const year = jsDate.getFullYear();
+    const hours = jsDate.getHours().toString().padStart(2, '0');
+    const minutes = jsDate.getMinutes().toString().padStart(2, '0');
+    const seconds = jsDate.getSeconds().toString().padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+}
+
+function addRowToTable(makat, timeValue) {
+    const tableBody = document.getElementById('resultTable1').querySelector('tbody');
+    const row = document.createElement('tr');
+    row.innerHTML = `<td>${makat}</td><td>${timeValue}</td>`;
+    tableBody.appendChild(row);
+}
+
+function addRowToTableForFile2(makat, startTime, endTime) {
+    const tableBody = document.getElementById('resultTable2').querySelector('tbody');
+    const row = document.createElement('tr');
+    row.innerHTML = `<td>${makat}</td><td>${startTime}</td><td>${endTime}</td>`;
+    tableBody.appendChild(row);
 }
