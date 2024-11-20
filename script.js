@@ -14,6 +14,7 @@ document.getElementById('file1').addEventListener('change', function(event) {
         // Фильтруем данные, оставляем только нужные столбцы
         filteredFile1Data = file1Data.slice(1).map(row => {
             return {
+                eshkol: row[2], 
                 makat: `${row[4]}-${row[5]}`, // Формируем makat из двух столбцов
                 time: formatExcelDate(row[10]), // Форматируем время
             };
@@ -22,8 +23,8 @@ document.getElementById('file1').addEventListener('change', function(event) {
         console.log("Filtered first file data:", filteredFile1Data);
 
         if (filteredFile1Data.length > 0) {
-            filteredFile1Data.forEach(({ makat, time }) => {
-                addRowToTable(makat, time);
+            filteredFile1Data.forEach(({ eshkol, makat, time }) => {
+                addRowToTable(eshkol, makat, time);
             });
         } else {
             console.log("No data found in the filtered first file.");
@@ -53,11 +54,13 @@ document.getElementById('file2').addEventListener('change', function(event) {
                     const startTime = row[5];
                     const endTime = row[6];
                     const makatList = row[8];
+                    const eshkol = row[1]
                     if (makatList) {
                         const makatArray = makatList.split(',').map(m => m.trim());
                         makatArray.forEach(makat => {
                             // Добавляем данные в объект
                             file2DataObject.push({
+                                eshkol: eshkol,
                                 makat: makat,
                                 startTime: startTime,
                                 endTime: endTime
@@ -66,6 +69,7 @@ document.getElementById('file2').addEventListener('change', function(event) {
                             // Создаем строку таблицы для каждого маката
                             const row = document.createElement('tr');
                             row.innerHTML = `
+                                <td>${eshkol}</td>
                                 <td>${makat}</td>
                                 <td>${startTime}</td>
                                 <td>${endTime}</td>
@@ -91,6 +95,7 @@ document.getElementById('analyzeButton').addEventListener('click', analyzeFiles)
 function analyzeFiles() {
     const analysisResults = [];
     filteredFile1Data.forEach((row1) => {
+        const eshkol1 = row1.eshkol
         const makat1 = row1.makat;
         const time1 = row1.time; // Время в формате строки "DD/MM/YYYY HH:MM:SS"
         const time1Date = stringToDate(time1); // Преобразуем строку в объект Date
@@ -111,7 +116,7 @@ function analyzeFiles() {
 
         // Добавляем только те результаты, у которых "No Match"
         if (!isMatchFound) {
-            analysisResults.push({ makat: makat1, time: time1, status: 'No Match' });
+            analysisResults.push({ eshkol: eshkol1 ,makat: makat1, time: time1, status: 'פיספוס' });
         }
     });
 
@@ -138,13 +143,14 @@ function displayAnalysisResults(results) {
     if (results.length === 0) {
         // Если нет результатов, выводим сообщение
         const messageRow = document.createElement('tr');
-        messageRow.innerHTML = `<td colspan="3" style="text-align: center;">כל הכבוד לאושרית!!!.</td>`;
+        messageRow.innerHTML = `<td colspan="4" style="text-align: center;">כל הכבוד לאושרית!!!</td>`;
         analysisTableBody.appendChild(messageRow);
     } else {
         // Если есть результаты, добавляем их в таблицу
         results.forEach(result => {
             const row = document.createElement('tr');
             row.innerHTML = `
+                <td>${result.eshkol}</td>
                 <td>${result.makat}</td>
                 <td>${result.time}</td>
                 <td>${result.status}</td>
@@ -192,9 +198,9 @@ function formatExcelDate(excelDate) {
     return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
 }
 
-function addRowToTable(makat, timeValue) {
+function addRowToTable(eshkol,makat, timeValue) {
     const tableBody = document.getElementById('resultTable1').querySelector('tbody');
     const row = document.createElement('tr');
-    row.innerHTML = `<td>${makat}</td><td>${timeValue}</td>`;
+    row.innerHTML = `<td>${eshkol}</td><td>${makat}</td><td>${timeValue}</td>`;
     tableBody.appendChild(row);
 }

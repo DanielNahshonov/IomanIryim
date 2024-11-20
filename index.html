@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,21 +9,22 @@
 </head>
 <body>
     <div class="main-container">
-        <h1>Excel File Analyzer</h1>
+        <h1>לבדיקות של יומן אירועים</h1>
         <div class="tables-container">
             <!-- First File Section -->
             <div class="file-section">
-                <h2>Avner Excel File Analyzer</h2>
+                <h2>דוח יומן אירועים</h2>
                 <form>
-                    <label for="file1">Upload File:</label>
+                    <label for="file1">נה לעלות כובץ:</label>
                     <input type="file" id="file1" accept=".xls,.xlsx">
                 </form>
                 <div class="table-container">
                     <table id="resultTable1">
                         <thead>
                             <tr>
-                                <th>Makat</th>
-                                <th>Time</th>
+                                <th>אשכול</th>
+                                <th>מקט</th>
+                                <th>תאריך ושעת נסיעה</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -35,18 +36,19 @@
 
             <!-- Second File Section -->
             <div class="file-section">
-                <h2>Tahbura Excel File Analyzer</h2>
+                <h2>דול של משרד תחבורה</h2>
                 <form>
-                    <label for="file2">Upload Second File:</label>
+                    <label for="file2">נה לעלות כובץ:</label>
                     <input type="file" id="file2" accept=".xls,.xlsx">
                 </form>
                 <div class="table-container">
                     <table id="resultTable2">
                         <thead>
                             <tr>
-                                <th>Makat</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
+                                <th>אשכול</th>
+                                <th>מקט</th>
+                                <th>תאריך ושעת התחלת אירוע</th>
+                                <th>תאריך ושעת סיום אירוע</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -58,14 +60,15 @@
 
             <!-- Analysis Section -->
             <div class="file-section">
-                <h2>Analysis Results</h2>
+                <h2>תוצאות הבדיקה</h2>
                 <div class="table-container">
                     <table id="analysisTable">
                         <thead>
                             <tr>
-                                <th>Makat</th>
-                                <th>Time</th>
-                                <th>Match Status</th>
+                                <th>אשכול</th>
+                                <th>מקט</th>
+                                <th>תאריך ושעת נסיעה</th>
+                                <th>סטטוס הבבדיקה</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -74,7 +77,7 @@
                     </table>
                 </div>
                 <!-- Add the button to trigger analysis -->
-                <button id="analyzeButton">Run Analysis</button>
+                <button id="analyzeButton">התחיל בדיקה</button>
             </div>
         </div>
     </div>
