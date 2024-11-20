@@ -92,8 +92,8 @@ document.getElementById('file2').addEventListener('change', function(event) {
 // Основная функция для обработки анализа
 document.getElementById('analyzeButton').addEventListener('click', analyzeFiles);
 
+const analysisResults = [];
 function analyzeFiles() {
-    const analysisResults = [];
     filteredFile1Data.forEach((row1) => {
         const eshkol1 = row1.eshkol
         const makat1 = row1.makat;
@@ -203,4 +203,28 @@ function addRowToTable(eshkol,makat, timeValue) {
     const row = document.createElement('tr');
     row.innerHTML = `<td>${eshkol}</td><td>${makat}</td><td>${timeValue}</td>`;
     tableBody.appendChild(row);
+}
+document.getElementById('exportButton').addEventListener('click', exportToExcel);
+
+function exportToExcel() {
+    if (!analysisResults || analysisResults.length === 0) {
+        alert("Нет данных для экспорта.");
+        return;
+    }
+
+    // Создаем массив данных для экспорта
+    const exportData = analysisResults.map(result => ({
+        "אשכול": result.eshkol,
+        "מק\"ט": result.makat,
+        "זמן": result.time,
+        "סטטוס": result.status || "No Match"
+    }));
+
+    // Преобразуем данные в формат Excel
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Analysis Results");
+
+    // Генерируем файл и загружаем его
+    XLSX.writeFile(workbook, "AnalysisResults.xlsx");
 }
