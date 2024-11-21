@@ -12,13 +12,14 @@ document.getElementById('file1').addEventListener('change', function(event) {
         const file1Data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
 
         // Фильтруем данные, оставляем только нужные столбцы
-        filteredFile1Data = file1Data.slice(1).map(row => {
-            return {
-                eshkol: row[2], 
-                makat: `${row[4]}-${row[5]}`, // Формируем makat из двух столбцов
-                time: formatExcelDate(row[10]), // Форматируем время
-            };
-        });
+        filteredFile1Data = file1Data.slice(1).filter(row => row[2] && row[4] && row[5] && row[10]) // Убедимся, что все нужные столбцы не пустые
+    .map(row => {
+        return {
+            eshkol: row[2],
+            makat: `${row[4]}-${row[5]}`,
+            time: formatExcelDate(row[10]),
+        };
+    });
 
         console.log("Filtered first file data:", filteredFile1Data);
 
